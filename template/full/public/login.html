@@ -1,0 +1,150 @@
+
+<html lang="en">
+  <head>
+    <title>Visit www.pixelrocket.store to learn how to become a frontend web developer</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com"/>
+    <link href="template-assets/fonts/fonts.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="css/tailwind/tailwind.min.css"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon.png"/>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js" defer="defer"></script>
+  </head>
+  <body class="antialiased bg-body text-body font-body">
+    <div>
+      <div>
+        <p class="mb-0 py-3 bg-sweetGreen-200 text-sweetGreen-800 text-center">Want to learn how to build templates like this one? Visit <a href="https://www.pixelrocket.store">www.pixelrocket.store</a></p>
+      </div>
+      <section x-data="{ mobileNavOpen: false }">
+        <nav class="py-5 bg-darkGreen-900">
+          <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between"><a href="index.html"><img src="images/logo-white-3.svg" alt=""/></a>
+              <div class="hidden lg:flex gap-2 p-1 rounded-full bg-white bg-opacity-10"><a class="px-3 py-2 rounded-full text-white text-sm hover:bg-white hover:bg-opacity-20 transition duration-200" href="index.html">Home</a><a class="px-3 py-2 rounded-full text-white text-sm hover:bg-white hover:bg-opacity-20 transition duration-200" href="about.html">About</a><a class="px-3 py-2 rounded-full text-white text-sm hover:bg-white hover:bg-opacity-20 transition duration-200" href="pricing.html">Pricing</a><a class="px-3 py-2 rounded-full text-white text-sm hover:bg-white hover:bg-opacity-20 transition duration-200" href="blog.html">Blog</a><a class="px-3 py-2 rounded-full text-white text-sm hover:bg-white hover:bg-opacity-20 transition duration-200" href="contact.html">Contact</a></div><a class="hidden lg:flex items-center gap-2 text-white hover:text-green-500 transition duration-200" href="login.html"><span class="text-sm font-medium">Sign in</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewbox="0 0 16 16" fill="none">
+                  <path d="M5.5 3L10.5 8L5.5 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg></a>
+              <button class="lg:hidden" x-on:click="mobileNavOpen = !mobileNavOpen">
+                <svg width="51" height="51" viewbox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="56" height="56" rx="28" fill="white"></rect>
+                  <path d="M37 32H19M37 24H19" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </nav>
+        <div class="hidden fixed top-0 left-0 bottom-0 w-5/6 max-w-xs z-50" :class="{ 'hidden': !mobileNavOpen, 'block': mobileNavOpen }">
+          <div class="fixed inset-0 bg-black opacity-20" x-on:click="mobileNavOpen = !mobileNavOpen"></div>
+          <nav class="relative p-8 w-full h-full bg-white overflow-y-auto">
+            <div class="flex items-center justify-between"><a class="inline-block" href="#"><img src="images/logo-black-3.svg" alt=""/></a>
+              <button x-on:click="mobileNavOpen = !mobileNavOpen">
+                <svg width="24" height="24" viewbox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M6 18L18 6M6 6L18 18" stroke="#111827" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+              </button>
+            </div>
+            <ul class="flex flex-col gap-12 py-12 my-12">
+              <li><a class="text-sm font-medium" href="index.html">Home</a></li>
+              <li><a class="text-sm font-medium" href="about.html">About</a></li>
+              <li><a class="text-sm font-medium" href="pricing.html">Pricing</a></li>
+              <li><a class="text-sm font-medium" href="blog.html">Blog</a></li>
+              <li><a class="text-sm font-medium" href="contact.html">Contact</a></li>
+            </ul>
+            <div class="text-center"><a class="inline-flex items-center gap-2 text-black hover:text-opacity-80 transition duration-200" href="login.html"><span class="text-sm font-medium">Sign in</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewbox="0 0 16 16" fill="none">
+                  <path d="M5.5 3L10.5 8L5.5 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg></a></div>
+          </nav>
+        </div>
+      </section>
+      <section class="bg-darkGreen-900 py-6 px-6">
+        <div class="flex flex-wrap -m-4">
+          <div class="w-full lg:w-1/2 p-4">
+            <div class="relative">
+              <div class="absolute top-6 left-6"><a class="inline-flex items-center gap-2 text-darkGreen-900 hover:text-opacity-70 transition duration-200" href="#">                              </a>                              
+                                          
+              </div><img class="object-cover rounded-2xl" style="height:850px" src="template-assets/images/sign-up/picture-green3.png" alt=""/>
+            </div>
+          </div>
+          <div class="w-full lg:w-1/2 p-4">
+            <div class="flex flex-col justify-center h-full max-w-md">
+              <h1 class="font-heading text-white text-4xl font-bold mb-4">Login</h1>
+              <p class="text-gray-400 mb-8">Welcome back to Warp Speed</p>
+              <form action="">
+                <label class="block text-sm mb-2 text-white font-medium" for="email">Email</label>
+                <input class="px-4 py-3 mb-6 rounded-full border border-white border-opacity-10 bg-white bg-opacity-5 text-sm placeholder-white placeholder-opacity-50 text-white focus:border-white focus:border focus:border-opacity-50 transition duration-200 outline-none w-full" type="email" id="email" placeholder="john@email.com"/>
+                <label class="block text-sm mb-2 text-white font-medium" for="password">Password</label>
+                <div class="rounded-full border border-white border-opacity-10 bg-white bg-opacity-5 px-4 py-3 flex items-center mb-8" x-data="{ visible: false }">
+                  <input class="flex-1 bg-transparent text-sm placeholder-white placeholder-opacity-50 text-white transition duration-200 outline-none" type="password" :type="visible ? 'text' : 'password'" id="password" placeholder="Enter password"/>
+                  <svg x-on:click="visible = !visible" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewbox="0 0 16 16" fill="none">
+                    <g opacity="0.5">
+                      <path d="M13.7445 6.36839L13.7446 6.36857C14.0157 6.79424 14.1663 7.3838 14.1663 7.99912C14.1663 8.61458 14.0157 9.20179 13.7454 9.62345L13.7447 9.62455C13.0069 10.7821 12.1122 11.6786 11.1304 12.2878C10.1493 12.8899 9.08596 13.2066 7.99967 13.2066C5.83421 13.2066 3.72502 11.9415 2.25517 9.62537L2.25473 9.62468C1.98347 9.1988 1.83301 8.61081 1.83301 7.99662C1.83301 7.3825 1.98344 6.79456 2.25465 6.36869C2.99243 5.21114 3.88718 4.31462 4.86891 3.70547C5.85008 3.10332 6.91339 2.78662 7.99967 2.78662C10.1646 2.78662 12.2742 4.05784 13.7445 6.36839ZM4.80634 7.99995C4.80634 9.76196 6.22939 11.1933 7.99967 11.1933C9.76996 11.1933 11.193 9.76196 11.193 7.99995C11.193 6.23795 9.76996 4.80662 7.99967 4.80662C6.22939 4.80662 4.80634 6.23795 4.80634 7.99995Z" fill="white" stroke="white" style="fill:white;fill-opacity:1;stroke:white;stroke-opacity:1;"></path>
+                      <path d="M7.99961 6.09326C6.95294 6.09326 6.09961 6.94659 6.09961 7.99993C6.09961 9.04659 6.95294 9.89993 7.99961 9.89993C9.04628 9.89993 9.90628 9.04659 9.90628 7.99993C9.90628 6.95326 9.04628 6.09326 7.99961 6.09326Z" fill="white" style="fill:white;fill-opacity:1;"></path>
+                    </g>
+                  </svg>
+                </div>
+                <button class="group relative inline-block w-full mb-8 p-0.5 font-semibold overflow-hidden rounded-full shadow-green hover:shadow-none focus:shadow-none" type="submit">
+                  <div class="absolute inset-0 bg-gradient-to-b from-green-400 to-green-500 rounded-full"></div>
+                  <div class="relative z-50 flex justify-center items-center py-2 px-4 bg-green-500 group-hover:bg-green-600 group-focus:bg-green-600 rounded-full transition duration-200">
+                    <p class="text-white text-center">Log in</p>
+                  </div>
+                </button>
+                <p class="text-center text-white text-sm"><span class="text-opacity-70">Don’t have an account?</span>                              <a class="text-white font-semibold hover:text-opacity-70 transition duration-200" href="register.html">Sign up</a></p>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="bg-darkGreen-700 py-32 relative overflow-hidden">
+        <div class="container mx-auto px-4">
+          <h1 class="font-heading text-white text-center text-4xl md:text-5xl max-w-md md:max-w-xl mx-auto font-bold mb-4">Want to learn how to build templates like this one?</h1>
+          <p class="text-white text-center mb-10">Visit Pixel Rocket to learn frontend web development</p>
+          <div class="text-center"><a class="group relative inline-block p-0.5 font-semibold overflow-hidden rounded-full" href="#">
+              <div class="absolute inset-0 bg-gradient-to-b from-white to-gray-500 group-focus:to-white opacity-40 group-focus:opacity-20 rounded-full"></div></a>
+            <div class="relative z-50 flex items-center w-64 mx-auto text-center justify-center py-2 px-5 bg-white group-hover:bg-white group-focus:bg-white group-hover:bg-opacity-80 group-focus:bg-opacity-80 rounded-full transition duration-200"><a class="group relative inline-block p-0.5 font-semibold overflow-hidden rounded-full" href="#"></a><a class="mr-2 text-darkGreen-900 group-hover:text-pinkSecondary-900 group-focus:text-pinkSecondary-900" href="https://www.pixelrocket.store">Visit Pixel Rocket</a>
+              <svg xmlns="http://www.w3.org/2000/svg" width="21" height="20" viewbox="0 0 21 20" fill="none">
+                <path d="M5.49984 10H15.9165M15.9165 10L10.9165 5M15.9165 10L10.9165 15" stroke="#3D0412" style="stroke:#3D0412;stroke:color(display-p3 0.2392 0.0157 0.0706);stroke-opacity:1;" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="bg-darkGreen-900 py-20">
+        <div class="container mx-auto px-4">
+          <div class="pb-20 border-b border-white border-opacity-30 mb-10">
+            <div class="flex flex-wrap justify-between -m-4">
+              <div class="w-full lg:w-1/6 p-4"><a class="inline-block" href="#"><img class="h-16" src="images/logo-white-3.svg" alt=""/></a></div>
+              <div class="w-full sm:w-1/2 lg:w-1/6 p-4">
+                <ul class="flex flex-col gap-6">
+                  <li><a class="text-white hover:text-opacity-70 text-xl transition duration-200" href="#">Features</a></li>
+                  <li><a class="text-white hover:text-opacity-70 text-xl transition duration-200" href="#">How it works</a></li>
+                </ul>
+              </div>
+              <div class="w-full sm:w-1/2 lg:w-1/6 p-4">
+                <ul class="flex flex-col gap-6">
+                  <li><a class="text-white hover:text-opacity-70 text-xl transition duration-200" href="#">Pricing</a></li>
+                  <li><a class="text-white hover:text-opacity-70 text-xl transition duration-200" href="#">FAQs</a></li>
+                </ul>
+              </div>
+              <div class="w-full sm:w-1/2 lg:w-1/6 p-4">
+                <ul class="flex flex-col gap-6">
+                  <li><a class="text-white hover:text-opacity-70 text-xl transition duration-200" href="#">About</a></li>
+                  <li><a class="text-white hover:text-opacity-70 text-xl transition duration-200" href="#">Blog</a></li>
+                </ul>
+              </div>
+              <div class="w-full sm:w-1/2 lg:w-1/6 p-4">
+                <ul class="flex flex-col gap-6">
+                  <li><a class="text-white hover:text-opacity-70 text-xl transition duration-200" href="#">Contact Us</a></li>
+                  <li><a class="text-white hover:text-opacity-70 text-xl transition duration-200" href="#">Privacy Policy</a></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="flex justify-between items-center flex-wrap gap-6">
+            <p class="text-white">© Warp Speed. All rights reserved.</p>
+            <div class="flex flex-wrap gap-6"><a href="#"><img src="template-assets/images/logos/twitter-x-logo.svg" alt=""/></a>        <a href="#"><img src="template-assets/images/logos/linkedin-logo.svg" alt=""/></a>        <a href="#"><img src="template-assets/images/logos/instagram-logo.svg" alt=""/></a>        <a href="#"><img src="template-assets/images/logos/facebook-logo.svg" alt=""/></a></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </body>
+</html>
