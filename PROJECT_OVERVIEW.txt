@@ -1,0 +1,102 @@
+============================================================
+PROJECT OVERVIEW — Hamburg Handball Frontend
+============================================================
+
+1) Flujo general del proyecto
+-----------------------------
+- El frontend vive en `web/` y está construido con Vite + React + TypeScript.
+- Toda la lógica de negocio y persistencia corre dentro de Supabase (PostgreSQL, Auth y Realtime).
+- El cliente React consume Supabase directamente mediante la `anon key`, aplicando reglas de seguridad (RLS) para controlar el acceso.
+- Los estilos se basan en el template provisto en `template/full/` y se adaptan mediante TailwindCSS para mantener consistencia visual.
+- Cualquier asset del template debe copiarse a `web/src/assets` (o a `web/dist/assets` para builds estáticas) antes de usarse dentro del código.
+
+2) ¿Qué hace Vite en este proyecto?
+-----------------------------------
+- **Servidor de desarrollo:** Vite levanta un dev server en `http://localhost:3002` con Hot Module Replacement, lo que permite ver cambios al instante sin recargar la página completa.
+- **Alias y resoluciones:** a través de `vite.config.ts` se define el alias `@` que apunta a `web/src`, simplificando importaciones (`@/lib/supabase`).
+- **Compilación:** en modo build, Vite usa esbuild/rollup para producir assets optimizados (`web/dist/`) listos para deploy.
+- **Testing:** comparte configuración con Vitest porque ambos se apoyan en la misma capa de módulos.
+
+3) Base de datos definida en `supabase_seed.sql`
+-----------------------------------------------
+El seed crea la estructura mínima y algunos datos de ejemplo:
+- **Tablas principales:**
+  - `socios`: datos personales y estado de actividad.
+  - `periodos`: meses/años con el importe asociado a la cuota.
+  - `cuotas_socios`: relación socio-periodo, importe, estado (`pendiente`, `pagado`, `vencido`, `rechazado`) y fecha de vencimiento.
+  - `pagos`: registros de pagos, método, referencia y fecha.
+  - `usuarios`: relación entre credenciales de Supabase Auth y los socios, con campo `rol` (`admin`, `contador`, `operador`, `socio`).
+  - `auditoria`: log opcional de acciones con payload JSON.
+- **Trigger `set_periodo_text`:** calcula el campo `periodo` (formato `YYYY-MM`) cada vez que se inserta o actualiza una cuota.
+- **Función `dashboard_stats`:** devuelve conteos rápidos de socios, morosos y pagos del mes para alimentar tarjetas del dashboard.
+- **Vista `reportes_view`:** expone métricas resumidas (socios activos, morosos, pagos del mes) sin exponer lógica adicional.
+- **Publicación realtime:** agrega `socios`, `cuotas_socios` y `pagos` a `supabase_realtime` para engancharse con canales en vivo.
+- **Políticas RLS:** habilitan lectura (`SELECT`) para usuarios autenticados en tablas clave; amplía o crea políticas adicionales según el rol cuando necesites escrituras.
+- **Índices y constraints:** optimizan consultas comunes (unique de referencia de pago, índice por estado de cuota, índice por fecha de pago).
+- **Datos iniciales:** genera dos socios y dos periodos para empezar a probar la app inmediatamente.
+
+4) Supabase sin backend propio
+------------------------------
+- **Autenticación:** se realiza directamente desde el cliente con `supabase.auth` usando la `anon key`. Supabase gestiona correos, recuperación de contraseña y sesiones.
+- **Autorización:** las RLS policies en PostgreSQL definen quién puede ver o modificar cada fila. Como el cliente solo tiene la `anon key`, las acciones permitidas dependen de esas políticas.
+- **Operaciones privilegiadas:** para tareas administrativas (por ejemplo, generar reportes globales o importar pagos masivos) podés emplear:
+  - Edge Functions de Supabase (TypeScript/JS desplegadas dentro de Supabase).
+  - Ejecutar scripts Node con la Service Role key en entornos seguros (nunca en el cliente).
+- **Realtime y storage:** Supabase provee canales websockets y bucket de storage que pueden consumirse también desde el frontend sin backend intermedio.
+- **Ventaja:** reduce la complejidad operativa del MVP; se puede evolucionar a un backend propio si las reglas de seguridad o la lógica lo requieren.
+
+5) Archivos de configuración explicados
+---------------------------------------
+- **`web/vite.config.ts`:**
+  - Registra el plugin `@vitejs/plugin-react-swc`.
+  - Declara el alias `@ -> src`.
+  - Configura el dev server en el puerto 3002.
+  - Define los ajustes de Vitest (entorno `jsdom`, archivo de setup y reporter de cobertura).
+
+- **`web/tailwind.config.ts`:**
+  - Activa `darkMode` por clase.
+  - Escanea `index.html` y cualquier archivo TS/TSX para generar utilidades.
+  - Extiende la paleta de colores con tonos `primary` y `secondary`.
+  - Registra el plugin `tailwindcss-animate` para transiciones declarativas.
+
+- **`web/postcss.config.cjs`:**
+  - Encadena `tailwindcss` y `autoprefixer` para que Vite procese las clases y agregue prefijos CSS automáticamente.
+
+- **`web/eslint.config.js`:**
+  - Usa la configuración flat de ESLint.
+  - Combina reglas recomendadas de JavaScript y TypeScript.
+  - Añade plugins de React Hooks y React Refresh.
+  - Enforcea importaciones de tipos (`@typescript-eslint/consistent-type-imports`) y la regla de export único de componentes para hot reload.
+  - Ignora carpetas generadas (`dist`, `coverage`, `node_modules`).
+
+- **`web/tsconfig.json`:**
+  - Define opciones estrictas de TypeScript para el código de la app.
+  - Activa JSX con el runtime automático (`react-jsx`).
+  - Configura el alias `@/*`.
+  - Incluye los tipos de Vitest y Vite.
+
+- **`web/tsconfig.node.json`:**
+  - TS config complementaria para archivos ejecutados por Node (ej. `vite.config.ts`).
+  - Usa modo `composite` y habilita importaciones default sintéticas.
+
+- **`web/vitest.setup.ts`:**
+  - Importa `@testing-library/jest-dom` para añadir matchers personalizados en las pruebas.
+
+- **`web/package.json`:**
+  - Lista dependencias de runtime (`react`, `@supabase/supabase-js`) y dev (`vitest`, `eslint`, `tailwindcss`).
+  - Define scripts de conveniencia: `dev`, `build`, `lint`, `test`, `preview`.
+
+- **`web/index.html`:**
+  - Punto de entrada para Vite; monta la app en `#root` e inyecta los bundles generados al compilar.
+
+- **`.env.example`:**
+  - Plantilla para credenciales de Supabase (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`).
+
+6) Recomendaciones de trabajo diario
+------------------------------------
+- Ajustate a las reglas de `reglas/dev-frontend.txt` (plan detallado, eventos `handle*`, accesibilidad y reutilización del template).
+- Antes de commitear, corré `npm run lint` y `npm run test`.
+- Cuando agregues assets nuevos del template, organizalos dentro de `web/src/assets` para que Vite los procese correctamente.
+- Para depurar reglas de RLS, usá el panel de SQL de Supabase y ejecutá pruebas con la opción "Run as authenticated user".
+
+Esta guía debería darte el panorama completo del proyecto y dónde encaja cada pieza. Ante cualquier duda, consultá este archivo o abre un issue en el repositorio.
