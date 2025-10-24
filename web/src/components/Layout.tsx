@@ -1,5 +1,7 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import type { PropsWithChildren } from "react";
+import { supabase } from "@/lib/supabase";
+import { useEffect, useState } from "react";
 
 const navigation = [
   { to: "/", label: "Resumen" },
@@ -8,6 +10,42 @@ const navigation = [
   { to: "/pagos", label: "Pagos" },
   { to: "/reportes", label: "Reportes" },
 ];
+
+function AdminMenuLink() {
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const { data } = await supabase.auth.getUser();
+        // Prefer user_metadata.role if present
+        const role = data?.user?.user_metadata?.role || null;
+        if (mounted && role === 'admin') setIsAdmin(true);
+      } catch (e) {
+        // ignore
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  if (!isAdmin) return null;
+  return (
+    <NavLink
+      to="/admin/create-user"
+      className={({ isActive }) =>
+        `rounded-full px-3 py-1 text-sm font-medium transition-colors ${
+          isActive ? "bg-primary text-primary-foreground" : "text-slate-300 hover:text-white"
+        }`
+      }
+    >
+      Admin: Crear usuario
+    </NavLink>
+  );
+}
 
 export function Layout({ children }: PropsWithChildren) {
   return (
@@ -22,7 +60,7 @@ export function Layout({ children }: PropsWithChildren) {
               Gestión de socios
             </h1>
           </div>
-          <nav className="hidden gap-4 md:flex">
+          <nav className="hidden gap-4 md:flex items-center">
             {navigation.map(({ to, label }) => (
               <NavLink
                 key={to}
@@ -38,6 +76,9 @@ export function Layout({ children }: PropsWithChildren) {
                 {label}
               </NavLink>
             ))}
+            <AdminMenuLink />
+            {/* Logout button */}
+            <LogoutButton />
           </nav>
         </div>
       </header>
@@ -45,5 +86,36 @@ export function Layout({ children }: PropsWithChildren) {
         {children ?? <Outlet />}
       </main>
     </div>
+  );
+}
+
+function LogoutButton() {
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      // force refresh of client state to ensure hooks see the change
+    // Navigate to the login page and force reload to ensure all state is cleared
+    navigate("/login", { replace: true });
+    window.location.reload();
+      return;
+    } catch (err) {
+      // log and still redirect
+      console.error("Logout error", err);
+      navigate("/", { replace: true });
+      window.location.reload();
+      return;
+    }
+  };
+
+  return (
+    <button
+      onClick={handleLogout}
+      className="ml-4 rounded-full border border-white/10 px-3 py-1 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white"
+      aria-label="Cerrar sesión"
+    >
+      Cerrar sesión
+    </button>
   );
 }

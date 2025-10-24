@@ -47,11 +47,7 @@ const initialFormState: FormState = {
   confirmPassword: "",
 };
 
-const roleOptions: Array<{ value: FormState["role"]; label: string; description: string }> = [
-  { value: "socio", label: "Socio", description: "Acceso al panel para consultar cuotas y habilitaciones." },
-  { value: "operador", label: "Operador", description: "Carga y administración operativa de socios y cuotas." },
-  { value: "contador", label: "Contador", description: "Visualiza pagos y reportes contables." },
-];
+  // role selection removed for public registration: always create 'socio'
 
 const errorMessages = [
   {
@@ -69,6 +65,14 @@ const getFriendlyError = (rawMessage: string) => {
   const match = errorMessages.find(({ match }) => rawMessage.toLowerCase().includes(match));
   if (match) {
     return match.message;
+  }
+
+  // Supabase may return rate-limit / resend messages like:
+  // "For security purposes, you can only request this after 36 seconds."
+  const rateLimitMatch = rawMessage.match(/after\s+(\d+)\s+seconds/i);
+  if (rateLimitMatch) {
+    const seconds = Number(rateLimitMatch[1]);
+    return `Por seguridad podés intentarlo nuevamente en ${seconds} segundos.`;
   }
 
   return rawMessage;
@@ -125,7 +129,8 @@ const Register = () => {
       password: formState.password,
       document: formState.document.trim(),
       phone: formState.phone.trim() || undefined,
-      role: formState.role,
+      // force public registrations to 'socio'
+      role: 'socio',
     });
 
     if (response.status === "error") {
@@ -322,26 +327,10 @@ const Register = () => {
                     className="mt-2 w-full rounded-full border border-white/10 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/50 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/60"
                   />
                 </div>
+                {/* Public registration always creates a 'socio' (user) role. */}
                 <div>
-                  <label htmlFor="role" className="block text-sm font-semibold text-white">
-                    Rol en el sistema
-                  </label>
-                  <select
-                    id="role"
-                    name="role"
-                    value={formState.role}
-                    onChange={handleChange("role")}
-                    className="mt-2 w-full rounded-full border border-white/10 bg-white/10 px-4 py-3 text-sm text-white focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/60"
-                  >
-                    {roleOptions.map((option) => (
-                      <option key={option.value} value={option.value} className="text-slate-900">
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="mt-2 text-xs text-white text-opacity-60">
-                    {roleOptions.find((option) => option.value === formState.role)?.description}
-                  </p>
+                  <p className="block text-sm font-semibold text-white">Rol en el sistema</p>
+                  <p className="mt-2 text-sm text-white text-opacity-60">El registro público crea una cuenta con rol <span className="font-semibold">Socio</span>.</p>
                 </div>
               </div>
 

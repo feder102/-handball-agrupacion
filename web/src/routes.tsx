@@ -7,6 +7,8 @@ const DuesPage = lazy(() => import("./pages/Dues"));
 const PaymentsPage = lazy(() => import("./pages/Payments"));
 const ReportsPage = lazy(() => import("./pages/Reports"));
 const RegisterPage = lazy(() => import("./pages/Register"));
+const LoginPage = lazy(() => import("./pages/Login"));
+const AdminCreateUser = lazy(() => import("./pages/AdminCreateUser"));
 
 export type AppRoute = {
   path: string;
@@ -21,6 +23,8 @@ const routes: AppRoute[] = [
   { path: "/pagos", Component: PaymentsPage },
   { path: "/reportes", Component: ReportsPage },
   { path: "/register", Component: RegisterPage, layout: "plain" },
+  { path: "/admin/create-user", Component: AdminCreateUser },
+  { path: "/login", Component: LoginPage, layout: "plain" },
 ];
 
 export default routes;

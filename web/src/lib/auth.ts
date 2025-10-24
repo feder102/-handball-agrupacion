@@ -48,18 +48,11 @@ export const registerUser = async ({
       message: "No pudimos recuperar el identificador del usuario creado",
     };
   }
-
-  if (!signUpData.session) {
-    return {
-      status: "success",
-      requiresEmailConfirmation: true,
-    };
-  }
-
-  // Si se dispone de un endpoint server-side que ejecute la RPC
-  // (por ejemplo, una Supabase Edge Function usando la SERVICE_ROLE key),
-  // llamamos a ese endpoint para crear/actualizar las filas sensibles
-  // desde un contexto seguro. Esto evita exponer la service role key.
+  // If a server-side endpoint is configured to run the RPC (e.g. a
+  // Supabase Edge Function using the SERVICE_ROLE key), call it from
+  // a secure context to create/update sensitive rows. We call it
+  // immediately after obtaining the auth user id so the profile is
+  // created even when the user must confirm their email.
   const createUserEndpoint = import.meta.env.VITE_CREATE_USER_URL;
 
   if (createUserEndpoint) {
@@ -78,16 +71,26 @@ export const registerUser = async ({
         credentials: "omit",
       });
 
-      const json = await resp.json();
+      const json = await resp.json().catch(() => null);
 
       if (!resp.ok) {
         return { status: "error", message: json?.error || json?.message || "Error creating user on server" };
       }
-
-      return { status: "success", requiresEmailConfirmation: false };
+      // continue — we created the profile on the server. Response
+      // handling below will decide the correct return shape
     } catch (err: any) {
       return { status: "error", message: err?.message ?? String(err) };
     }
+  }
+
+  // If the sign up didn't create an immediate session (e.g. requires
+  // email confirmation), still return requiresEmailConfirmation=true
+  // but the server-side profile was already created above.
+  if (!signUpData.session) {
+    return {
+      status: "success",
+      requiresEmailConfirmation: true,
+    };
   }
 
   // Fallback: si no hay endpoint server-side configurado, intentamos

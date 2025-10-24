@@ -14,23 +14,58 @@ You communicate in Spanish.
 - If you do not know the answer, acknowledge it instead of guessing.
 - For every branch or pull request, generate new documentation and update existing materials in Spanish, incorporating Mermaid diagrams where relevant.
 
-### Coding Environment
-The user’s questions will involve the following languages and tools:
-- ReactJS
-- NextJS
-- JavaScript
-- TypeScript
-- TailwindCSS
-- HTML
-- CSS
+### Flow DB <> Auth (resumen y recomendaciones)
+Contexto: la DB usa ahora public.usuarios (1:1 con auth.users), public.roles, public.cuotas_usuarios y public.pagos.
+Reglas clave:
+- El id de public.usuarios debe ser idéntico al id en auth.users (uuid).
+- El proceso recomendado no es crear triggers automáticos en la DB desde auth.users; en su lugar:
+  1) El cliente (web/mobile) crea la cuenta en Supabase Auth (email/password o magic link).
+  2) El backend (Next.js API route / Edge Function) recibe la sesión y llama la RPC pública.create_usuario usando la SERVICE_ROLE key para insertar/actualizar la fila en public.usuarios.
+  3) El backend devuelve el resultado al cliente.
 
-### Code Implementation Guidelines
-Apply these rules whenever you write code:
-- Prefer early returns to keep the code easy to follow.
-- Style HTML exclusively with Tailwind classes; avoid separate CSS files or inline styles.
-- Use `class:` directives instead of ternary operators in class names whenever it fits.
-- Choose descriptive names for constants and handlers; event handlers must follow the `handleX` naming pattern (e.g., `handleClick`, `handleKeyDown`).
-- Include accessibility attributes (tabindex="0", aria-label, keyboard handlers, etc.) on interactive elements.
-- Declare arrow-function constants rather than function declarations; define explicit types whenever possible.
-- Use the styles and component patterns from the `template/` directory as your primary design reference.
-- Whenever you need an asset from the C:\Users\Fede\handball\template, copy it into `web/dist/assets/` before referencing it in the project.
+Ventajas:
+- Control de validaciones (documento único, email único).
+- Evita exponer SERVICE_ROLE directamente al cliente.
+- Evita errores de RLS al crear filas sin privilegios.
+
+### Pseudocódigo (plan) — Frontend + Backend
+1) Frontend: formulario de registro -> llama supabase.auth.signUp(...)
+2) Si signUp ok: redirigir a verificación/email o continuar login.
+3) Backend (Next.js API): endpoint /api/create-user
+   - Receives auth user id (p.e. from client session) OR uses supabase server-side cookie
+   - Calls supabase RPC public.create_usuario(p_id, documento, email, nombre, telefono, rol_nombre)
+   - Returns created/updated usuario row or error
+4) Frontend: llama /api/create-user con los datos del perfil (documento, nombre, telefono, rol)
+   - Maneja errores (documento/email duplicado) y muestra feedback.
+
+### Ejemplo de implementación del endpoint (Next.js API route) — pseudocódigo
+- Usar @supabase/supabase-js en server con la SERVICE_ROLE key guardada en variables de entorno.
+- Validaciones de entrada en backend.
+- Llamar rpc: supabaseAdmin.rpc('create_usuario', { p_id, p_documento, ... })
+
+Pseudocódigo (Next.js API, TypeScript-like):
+- plan:
+  1. Validar método POST.
+  2. Extraer authUserId del body o de la cookie de sesión (si el cliente envía su session accesible).
+  3. Validar campos (documento, email, nombre, rol).
+  4. Llamar RPC usando supabaseAdmin.rpc('create_usuario', { p_id: authUserId, p_documento: ..., p_email: ..., p_nombre: ..., p_telefono: ..., p_rol_nombre: ... })
+  5. Si error, mapear y devolver 4xx/409 según el caso.
+  6. Si ok, devolver usuario creado.
+
+### Buenas prácticas en el frontend
+- No incluir SERVICE_ROLE key en cliente.
+- En el cliente solo usar supabase anon public key para auth y lectura permitida.
+- Después de signUp, el cliente debe llamar al backend para crear su fila en public.usuarios (o pedir al admin que lo haga).
+- Mostrar mensajes claros en caso de conflicto (documento/email duplicado).
+
+### Notas finales
+- La DB ya contiene la función public.create_usuario para uso backend (security definer).
+- Mantener RLS como está: las operaciones desde cliente deben respetar políticas; por eso el backend con SERVICE_ROLE es el camino para insertar filas iniciales.
+- Si se prefiere trigger automático desde auth.users, crear uno controlado y auditado (no incluido por defecto).
+
+### Recursos y snippets reales
+- Usar @supabase/supabase-js en servidor:
+  - const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  - const { data, error } = await supabaseAdmin.rpc('create_usuario', { p_id, p_documento, p_email, p_nombre, p_telefono, p_rol_nombre });
+
+-- End of file (actualiza esta guía según necesidades del equipo).
