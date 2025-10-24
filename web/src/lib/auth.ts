@@ -56,6 +56,44 @@ export const registerUser = async ({
     };
   }
 
+  // Si se dispone de un endpoint server-side que ejecute la RPC
+  // (por ejemplo, una Supabase Edge Function usando la SERVICE_ROLE key),
+  // llamamos a ese endpoint para crear/actualizar las filas sensibles
+  // desde un contexto seguro. Esto evita exponer la service role key.
+  const createUserEndpoint = import.meta.env.VITE_CREATE_USER_URL;
+
+  if (createUserEndpoint) {
+    try {
+      const resp = await fetch(createUserEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          fullName,
+          document,
+          email: trimmedEmail,
+          phone,
+          role,
+        }),
+        credentials: "omit",
+      });
+
+      const json = await resp.json();
+
+      if (!resp.ok) {
+        return { status: "error", message: json?.error || json?.message || "Error creating user on server" };
+      }
+
+      return { status: "success", requiresEmailConfirmation: false };
+    } catch (err: any) {
+      return { status: "error", message: err?.message ?? String(err) };
+    }
+  }
+
+  // Fallback: si no hay endpoint server-side configurado, intentamos
+  // realizar la inserción desde el cliente (esto puede fallar si las
+  // políticas RLS lo impiden). Es preferible desplegar la función server-side
+  // y configurar VITE_CREATE_USER_URL en el entorno.
   const { data: socioData, error: socioError } = await supabase
     .from("socios")
     .insert({
