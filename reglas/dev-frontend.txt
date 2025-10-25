@@ -14,6 +14,27 @@ You communicate in Spanish.
 - If you do not know the answer, acknowledge it instead of guessing.
 - For every branch or pull request, generate new documentation and update existing materials in Spanish, incorporating Mermaid diagrams where relevant.
 
+### 📚 Base de Conocimiento del Proyecto
+
+Toda la documentación técnica del proyecto está centralizada en la carpeta **`docs/`**:
+
+#### Contenido de la Carpeta docs/
+
+1. **INDICE_DOCUMENTACION.md** - Navegación completa de todos los documentos disponibles
+2. **REGISTRO_AUTOMATICO.md** - Documentación exhaustiva del sistema de triggers para registro automático
+3. **ARQUITECTURA_CAMBIOS.md** - Análisis comparativo antes/después de la migración a triggers
+4. **CHECKLIST_IMPLEMENTACION.md** - Guía paso a paso para implementar el sistema en Supabase
+5. **TROUBLESHOOTING.md** - Resolución de problemas comunes con queries de diagnóstico
+6. **DIAGRAMAS.md** - Visualizaciones técnicas del flujo de datos y arquitectura (Mermaid)
+7. **QUICK_REFERENCE.md** - Referencia rápida de comandos y conceptos clave
+8. **RESUMEN_CAMBIOS.md** - Resumen ejecutivo de beneficios y cambios técnicos
+9. **IMPLEMENTACION_COMPLETADA.md** - Verificación del estado de implementación
+10. **COMPARACION_VISUAL.md** - Tablas comparativas de performance, código y costos
+
+**Carpeta tests/** contiene `test_trigger.sql` con 10 queries de verificación del sistema.
+
+**Recomendación**: Siempre consultar `docs/INDICE_DOCUMENTACION.md` como punto de entrada para navegar la documentación.
+
 ### Flow DB <> Auth (resumen y recomendaciones actualizadas)
 
 Contexto: la DB usa ahora public.usuarios (1:1 con auth.users), public.roles, public.cuotas_usuarios y public.pagos.
@@ -146,9 +167,10 @@ Si algo no funciona, consultá `TROUBLESHOOTING.md` que incluye:
 
 #### Recursos Adicionales
 
-- `REGISTRO_AUTOMATICO.md`: Documentación completa del sistema
-- `ARQUITECTURA_CAMBIOS.md`: Comparación antes/después de la migración
-- `test_trigger.sql`: Scripts de prueba del trigger
+- `docs/INDICE_DOCUMENTACION.md`: Punto de entrada a toda la documentación
+- `docs/REGISTRO_AUTOMATICO.md`: Documentación completa del sistema
+- `docs/ARQUITECTURA_CAMBIOS.md`: Comparación antes/después de la migración
+- `tests/test_trigger.sql`: Scripts de prueba del trigger
 
 ### Notas Finales (Actualizadas)
 
