@@ -14,58 +14,148 @@ You communicate in Spanish.
 - If you do not know the answer, acknowledge it instead of guessing.
 - For every branch or pull request, generate new documentation and update existing materials in Spanish, incorporating Mermaid diagrams where relevant.
 
-### Flow DB <> Auth (resumen y recomendaciones)
+### Flow DB <> Auth (resumen y recomendaciones actualizadas)
+
 Contexto: la DB usa ahora public.usuarios (1:1 con auth.users), public.roles, public.cuotas_usuarios y public.pagos.
-Reglas clave:
-- El id de public.usuarios debe ser idéntico al id en auth.users (uuid).
-- El proceso recomendado no es crear triggers automáticos en la DB desde auth.users; en su lugar:
-  1) El cliente (web/mobile) crea la cuenta en Supabase Auth (email/password o magic link).
-  2) El backend (Next.js API route / Edge Function) recibe la sesión y llama la RPC pública.create_usuario usando la SERVICE_ROLE key para insertar/actualizar la fila en public.usuarios.
-  3) El backend devuelve el resultado al cliente.
 
-Ventajas:
-- Control de validaciones (documento único, email único).
-- Evita exponer SERVICE_ROLE directamente al cliente.
-- Evita errores de RLS al crear filas sin privilegios.
+#### Sistema de Registro Automático (Trigger-Based)
 
-### Pseudocódigo (plan) — Frontend + Backend
-1) Frontend: formulario de registro -> llama supabase.auth.signUp(...)
-2) Si signUp ok: redirigir a verificación/email o continuar login.
-3) Backend (Next.js API): endpoint /api/create-user
-   - Receives auth user id (p.e. from client session) OR uses supabase server-side cookie
-   - Calls supabase RPC public.create_usuario(p_id, documento, email, nombre, telefono, rol_nombre)
-   - Returns created/updated usuario row or error
-4) Frontend: llama /api/create-user con los datos del perfil (documento, nombre, telefono, rol)
-   - Maneja errores (documento/email duplicado) y muestra feedback.
+El sistema ahora utiliza un **trigger de PostgreSQL** que se ejecuta automáticamente cuando se crea un usuario en `auth.users`:
 
-### Ejemplo de implementación del endpoint (Next.js API route) — pseudocódigo
-- Usar @supabase/supabase-js en server con la SERVICE_ROLE key guardada en variables de entorno.
-- Validaciones de entrada en backend.
-- Llamar rpc: supabaseAdmin.rpc('create_usuario', { p_id, p_documento, ... })
+1. **Frontend (React)**: 
+   - El cliente llama `supabase.auth.signUp()` con los datos en `options.data`
+   - Envía: documento, nombre, telefono (opcional), rol (default: 'socio')
 
-Pseudocódigo (Next.js API, TypeScript-like):
-- plan:
-  1. Validar método POST.
-  2. Extraer authUserId del body o de la cookie de sesión (si el cliente envía su session accesible).
-  3. Validar campos (documento, email, nombre, rol).
-  4. Llamar RPC usando supabaseAdmin.rpc('create_usuario', { p_id: authUserId, p_documento: ..., p_email: ..., p_nombre: ..., p_telefono: ..., p_rol_nombre: ... })
-  5. Si error, mapear y devolver 4xx/409 según el caso.
-  6. Si ok, devolver usuario creado.
+2. **Supabase Auth**:
+   - Crea el usuario en `auth.users`
+   - Los datos van a `raw_user_meta_data`
 
-### Buenas prácticas en el frontend
-- No incluir SERVICE_ROLE key en cliente.
-- En el cliente solo usar supabase anon public key para auth y lectura permitida.
-- Después de signUp, el cliente debe llamar al backend para crear su fila en public.usuarios (o pedir al admin que lo haga).
-- Mostrar mensajes claros en caso de conflicto (documento/email duplicado).
+3. **Trigger Automático (handle_new_user)**:
+   - Se ejecuta AFTER INSERT en `auth.users`
+   - Extrae datos de `raw_user_meta_data`
+   - Valida documento obligatorio
+   - Obtiene `rol_id` de `public.roles`
+   - Inserta automáticamente en `public.usuarios` con el mismo `id`
 
-### Notas finales
-- La DB ya contiene la función public.create_usuario para uso backend (security definer).
-- Mantener RLS como está: las operaciones desde cliente deben respetar políticas; por eso el backend con SERVICE_ROLE es el camino para insertar filas iniciales.
-- Si se prefiere trigger automático desde auth.users, crear uno controlado y auditado (no incluido por defecto).
+4. **Resultado**:
+   - Relación 1:1 garantizada (mismo UUID en ambas tablas)
+   - Sin necesidad de Edge Functions o backend adicional
+   - Todo sucede en una transacción de base de datos
 
-### Recursos y snippets reales
-- Usar @supabase/supabase-js en servidor:
-  - const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-  - const { data, error } = await supabaseAdmin.rpc('create_usuario', { p_id, p_documento, p_email, p_nombre, p_telefono, p_rol_nombre });
+#### Ventajas del Trigger
 
--- End of file (actualiza esta guía según necesidades del equipo).
+✅ **Sin backend adicional**: No se necesita Next.js API routes ni Edge Functions  
+✅ **Atomicidad**: Todo en una transacción de PostgreSQL  
+✅ **Performance**: Sin round-trips HTTP adicionales  
+✅ **Simplicidad**: Menos código para mantener  
+✅ **Seguridad**: Trigger con SECURITY DEFINER (privilegios controlados)  
+✅ **Validaciones centralizadas**: Todo en la función del trigger  
+
+#### Ejemplo de Implementación (Frontend)
+
+```typescript
+// web/src/lib/auth.ts
+export const registerUser = async ({
+  fullName,
+  email,
+  password,
+  document,
+  phone,
+  role,
+}: RegisterPayload): Promise<RegisterResponse> => {
+  const trimmedEmail = email.trim().toLowerCase();
+  const trimmedDocument = document.trim();
+
+  // Validación cliente-side
+  if (!trimmedDocument || trimmedDocument.length < 6) {
+    return { status: "error", message: "El documento es obligatorio" };
+  }
+
+  // Crear usuario con metadata
+  // El trigger handle_new_user() procesará automáticamente estos datos
+  const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+    email: trimmedEmail,
+    password,
+    options: {
+      data: {
+        documento: trimmedDocument,  // ← El trigger lee esto
+        nombre: fullName,            // ← El trigger lee esto
+        telefono: phone || null,     // ← El trigger lee esto
+        rol: role,                   // ← El trigger lee esto
+      },
+    },
+  });
+
+  if (signUpError) {
+    return { status: "error", message: signUpError.message };
+  }
+
+  // El trigger ya creó automáticamente el registro en public.usuarios
+  return {
+    status: "success",
+    requiresEmailConfirmation: !signUpData.session,
+  };
+};
+```
+
+#### Archivos Involucrados
+
+- **supabase_seed.sql**: Contiene la función `handle_new_user()` y el trigger `on_auth_user_created`
+- **web/src/lib/auth.ts**: Función `registerUser()` simplificada
+- **web/src/pages/Register.tsx**: Componente de registro que llama a `registerUser()`
+
+#### Validaciones del Trigger
+
+1. **Documento obligatorio**: Lanza excepción si está vacío (signup falla)
+2. **Documento único**: Loguea warning si está duplicado (signup continúa pero sin perfil)
+3. **Rol válido**: Si el rol no existe, usa 'socio' por defecto
+4. **Email único**: Supabase Auth lo valida automáticamente antes del trigger
+
+#### Manejo de Errores
+
+El trigger está configurado con bloques `exception` para NO fallar el signup si hay errores secundarios:
+
+```sql
+exception
+  when unique_violation then
+    raise warning 'Documento % ya existe para otro usuario', v_documento;
+    return new;  -- ← signup continúa
+  when others then
+    raise warning 'Error creando usuario en public.usuarios: %', sqlerrm;
+    return new;  -- ← signup continúa
+```
+
+Esto garantiza que:
+- El usuario SIEMPRE se crea en `auth.users`
+- Si hay problemas (ej: documento duplicado), se loguea pero no se interrumpe el flujo
+- El frontend puede manejar usuarios sin perfil si es necesario
+
+#### Testing
+
+Para probar el trigger:
+1. Ejecutá `test_trigger.sql` desde Supabase SQL Editor
+2. Verificá que los usuarios se crean en ambas tablas con el mismo `id`
+3. Consultá los logs de PostgreSQL en Supabase Dashboard → Logs
+
+#### Troubleshooting
+
+Si algo no funciona, consultá `TROUBLESHOOTING.md` que incluye:
+- Diagnóstico de problemas comunes
+- Queries de verificación
+- Soluciones paso a paso
+
+#### Recursos Adicionales
+
+- `REGISTRO_AUTOMATICO.md`: Documentación completa del sistema
+- `ARQUITECTURA_CAMBIOS.md`: Comparación antes/después de la migración
+- `test_trigger.sql`: Scripts de prueba del trigger
+
+### Notas Finales (Actualizadas)
+
+- **NO usar SERVICE_ROLE key en el frontend**: Solo usar `VITE_SUPABASE_ANON_KEY`
+- **NO crear Edge Functions para registro**: El trigger lo maneja automáticamente
+- **Mantener validaciones en frontend**: Documento único, formato de email, etc.
+- **RLS configurado**: Las políticas controlan el acceso según roles
+- **Logs de PostgreSQL**: Para depurar, revisar Supabase Dashboard → Logs → Postgres Logs
+
+-- End of file (actualizado con sistema de triggers)

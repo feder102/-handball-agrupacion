@@ -489,20 +489,109 @@ begin
 end;
 $$;
 
--- Note: no se expone esta función directamente al cliente sin pasar por backend.
--- Recomendación: crear un endpoint server-side (Next.js API route, Edge Function o serverless) que llame a esta RPC usando la SERVICE_ROLE key de Supabase.
+-- Note: esta RPC está disponible para uso backend (SERVICE_ROLE) si lo necesitás.
+-- Sin embargo, con el trigger automático siguiente, generalmente no será necesaria.
 
--- NOTA:
--- No se seedéan usuarios porque dependen de auth.users.
--- Flujo recomendado:
--- 1) Crear usuario vía Supabase Auth (email+password o magic link).
--- 2) Insertar su fila en public.usuarios (id = auth.users.id, documento único, rol_id según tabla roles).
---
--- Ejemplo (reemplazá IDs reales):
--- insert into public.usuarios (id, documento, email, nombre, telefono, rol_id)
--- values ('<auth.users.id>', '30123456', 'ana@example.com', 'Ana Müller', '...', (select id from roles where nombre='socio'));
---
--- Opcional: Si prefieres automatización, agrega un trigger similar al anterior para vincular basado en metadata (documento, rol).
+-- 13) Trigger automático: auth.users -> public.usuarios (1:1)
+-- Cuando se crea un usuario en auth.users, automáticamente se crea en public.usuarios
+-- usando los datos de raw_user_meta_data enviados desde el frontend durante signUp.
+
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+  v_rol_id smallint;
+  v_rol_nombre text;
+  v_documento text;
+  v_nombre text;
+  v_telefono text;
+begin
+  -- Extraer metadata del signup (enviada desde el frontend)
+  v_documento := coalesce(new.raw_user_meta_data->>'documento', '');
+  v_nombre := coalesce(new.raw_user_meta_data->>'nombre', new.email);
+  v_telefono := new.raw_user_meta_data->>'telefono';
+  v_rol_nombre := coalesce(new.raw_user_meta_data->>'rol', 'socio');
+
+  -- Validar que documento no esté vacío
+  if v_documento = '' then
+    raise exception 'El documento es obligatorio en raw_user_meta_data';
+  end if;
+
+  -- Obtener rol_id
+  select id into v_rol_id 
+  from public.roles 
+  where nombre = v_rol_nombre;
+  
+  if v_rol_id is null then
+    -- Si el rol no existe, usar 'socio' por defecto
+    select id into v_rol_id 
+    from public.roles 
+    where nombre = 'socio';
+  end if;
+
+  -- Insertar en public.usuarios (1:1 con auth.users)
+  insert into public.usuarios (
+    id, 
+    documento, 
+    email, 
+    nombre, 
+    telefono, 
+    rol_id, 
+    activo, 
+    creado_en, 
+    actualizado_en
+  )
+  values (
+    new.id,
+    v_documento,
+    new.email,
+    v_nombre,
+    v_telefono,
+    v_rol_id,
+    true,
+    now(),
+    now()
+  );
+
+  return new;
+exception
+  when unique_violation then
+    -- Si el documento ya existe, loguear pero no fallar el signup de auth
+    raise warning 'Documento % ya existe para otro usuario', v_documento;
+    return new;
+  when others then
+    -- Otros errores: loguear y continuar
+    raise warning 'Error creando usuario en public.usuarios: %', sqlerrm;
+    return new;
+end;
+$$;
+
+-- Crear el trigger en auth.users (requiere permisos de superuser/supabase)
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
+
+-- NOTA: Flujo de registro desde el frontend:
+-- 1) El cliente llama a supabase.auth.signUp() enviando:
+--    {
+--      email: 'usuario@example.com',
+--      password: 'password123',
+--      options: {
+--        data: {
+--          documento: '12345678',
+--          nombre: 'Juan Pérez',
+--          telefono: '+5491123456789',
+--          rol: 'socio' // opcional, default: 'socio'
+--        }
+--      }
+--    }
+-- 2) Supabase crea el usuario en auth.users
+-- 3) El trigger automáticamente crea el registro en public.usuarios
+-- 4) El usuario ya está listo para usar la aplicación
 
 -- (Limpieza rápida de políticas con nombres antiguos/duplicados)
 drop policy if exists usuarios_select_self on public.usuarios;

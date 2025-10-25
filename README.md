@@ -55,7 +55,7 @@ handball/
 
 > ℹ️ Reutilizá siempre los estilos y patrones del template en `template/full`. Si necesitás un asset, copialo primero dentro de `web/src/assets` (o `web/dist/assets` para builds estáticas) antes de referenciarlo.
 
-## 🛠️ Preparación del entorno
+## � Preparación del entorno
 
 1. Instalá dependencias:
 
@@ -81,7 +81,27 @@ VITE_SUPABASE_ANON_KEY=eyJhbGciOi...
 -- abre supabase_seed.sql y ejecútalo completo
 ```
 
-El script define las tablas `socios`, `periodos`, `cuotas_socios`, `pagos`, `usuarios`, `auditoria`, configura el trigger `set_periodo_text`, la función `dashboard_stats`, la vista `reportes_view`, políticas RLS de solo lectura y datos iniciales.
+El script define:
+- Tablas: `roles`, `usuarios`, `periodos`, `cuotas_usuarios`, `pagos`, `auditoria`
+- **Trigger automático** `handle_new_user()` para sincronizar `auth.users` → `public.usuarios` (1:1)
+- Función `dashboard_stats()` y vista `reportes_view` para métricas
+- Políticas RLS para control de acceso según roles
+- Datos iniciales (roles y períodos)
+
+### 🎯 Sistema de Registro Automático
+
+El proyecto utiliza un **trigger de PostgreSQL** que sincroniza automáticamente `auth.users` con `public.usuarios`:
+
+- Cuando un usuario se registra, el trigger crea su perfil automáticamente
+- Relación 1:1 garantizada (mismo ID en ambas tablas)
+- Sin necesidad de Edge Functions o backend adicional
+- Todo sucede en una sola transacción de base de datos
+
+Para más información sobre el sistema de registro, consultá:
+- 📚 [`REGISTRO_AUTOMATICO.md`](./REGISTRO_AUTOMATICO.md) - Documentación completa
+- 🏗️ [`ARQUITECTURA_CAMBIOS.md`](./ARQUITECTURA_CAMBIOS.md) - Comparación arquitectónica
+- 🔧 [`TROUBLESHOOTING.md`](./TROUBLESHOOTING.md) - Resolución de problemas
+- 🧪 [`test_trigger.sql`](./test_trigger.sql) - Scripts de prueba
 
 ## 🧑‍💻 Flujo de desarrollo local
 
@@ -100,9 +120,16 @@ Vite se levantará en `http://localhost:3002/`.
 ## 🔐 Autenticación y Supabase
 
 - Autenticación mediante `supabase.auth` (email/contraseña o magic link).
-- Helper `registerUser` inserta en Supabase Auth y sincroniza con las tablas `socios` y `usuarios`.
-- Políticas RLS habilitadas para lecturas de usuarios autenticados; ajustá según tus necesidades.
-- Para desarrollar sin backend adicional, todo acceso a datos se realiza con el **anon key** desde el cliente. Caso de requerir operaciones privilegiadas, migrá a Edge Functions o Service Role desde entornos seguros.
+- **Sistema de registro automático 1:1**: cuando se crea un usuario en `auth.users`, un trigger de base de datos crea automáticamente su perfil en `public.usuarios` usando los datos del `raw_user_meta_data`.
+- **Sin backend adicional**: todo el flujo de registro se maneja con triggers de PostgreSQL, eliminando la necesidad de Edge Functions o servidores intermedios.
+- Políticas RLS habilitadas para controlar el acceso según roles (`admin`, `contador`, `operador`, `socio`).
+- Para más detalles sobre el sistema de registro, consultá [`REGISTRO_AUTOMATICO.md`](./REGISTRO_AUTOMATICO.md).
+
+### Flujo de registro:
+1. Cliente llama `supabase.auth.signUp()` con los datos en `options.data`
+2. Supabase crea usuario en `auth.users`
+3. Trigger `handle_new_user()` crea automáticamente el registro en `public.usuarios`
+4. Usuario listo para usar la aplicación (relación 1:1 garantizada)
 
 ## 🎨 Lineamientos de UI
 
@@ -118,8 +145,26 @@ Vite se levantará en `http://localhost:3002/`.
 
 ## 📚 Documentación adicional
 
-- **Guía de desarrollo detallada**: `reglas/dev-frontend.txt` (lineamientos de código).
-- **Resumen técnico del proyecto**: consulta `PROJECT_OVERVIEW.txt` para entender a fondo el rol de Vite, Supabase y la configuración.
+### 📖 Guías Principales
+
+- **[📑 Índice de Documentación](./docs/INDICE_DOCUMENTACION.md)** - Navegación completa de todos los docs
+- **[📚 Sistema de Registro Automático](./docs/REGISTRO_AUTOMATICO.md)** - Documentación completa del trigger
+- **[🏗️ Cambios Arquitectónicos](./docs/ARQUITECTURA_CAMBIOS.md)** - Comparación antes/después
+- **[✅ Checklist de Implementación](./docs/CHECKLIST_IMPLEMENTACION.md)** - Guía paso a paso
+- **[🔧 Troubleshooting](./docs/TROUBLESHOOTING.md)** - Resolución de problemas comunes
+- **[🎨 Diagramas](./docs/DIAGRAMAS.md)** - Visualizaciones del sistema
+- **[🧪 Scripts de Prueba](./tests/test_trigger.sql)** - Testing del trigger
+
+### 📋 Reglas de Desarrollo
+
+- **Guía de desarrollo detallada**: `reglas/dev-frontend.txt` (lineamientos de código)
+- **Resumen técnico del proyecto**: consulta `PROJECT_OVERVIEW.txt` para entender a fondo el rol de Vite, Supabase y la configuración
+
+### 🚀 Quick Start
+
+1. Lee el [Resumen de Cambios](./docs/RESUMEN_CAMBIOS.md)
+2. Sigue el [Checklist de Implementación](./docs/CHECKLIST_IMPLEMENTACION.md)
+3. Consulta el [Índice](./docs/INDICE_DOCUMENTACION.md) para navegar toda la documentación
 
 ---
 

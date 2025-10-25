@@ -55,9 +55,21 @@ const errorMessages = [
     message: "Ese correo o documento ya está registrado. Probá iniciar sesión o recuperar la contraseña.",
   },
   {
+    match: "documento ya existe para otro usuario",
+    message: "Ese documento ya está registrado en el sistema. Si es tuyo, probá recuperar tu contraseña.",
+  },
+  {
+    match: "el documento es obligatorio",
+    message: "Debés proporcionar un número de documento válido para registrarte.",
+  },
+  {
     match: "new row violates row-level security policy",
     message:
-      "Tu usuario se creó, pero falta habilitar las políticas de inserción en Supabase para completar el alta en tablas internas.",
+      "Error de permisos al crear tu perfil. Contactá al administrador del sistema.",
+  },
+  {
+    match: "user already registered",
+    message: "Ya existe una cuenta con ese correo electrónico. Probá iniciar sesión.",
   },
 ];
 
