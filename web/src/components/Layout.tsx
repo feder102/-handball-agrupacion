@@ -4,7 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { useEffect, useState } from "react";
 
 const navigation = [
-  { to: "/", label: "Resumen" },
+  { to: "/dashboard", label: "Resumen" },
   { to: "/socios", label: "Socios" },
   { to: "/cuotas", label: "Cuotas" },
   { to: "/pagos", label: "Pagos" },
@@ -95,15 +95,14 @@ function LogoutButton() {
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
-      // force refresh of client state to ensure hooks see the change
-    // Navigate to the login page and force reload to ensure all state is cleared
-    navigate("/login", { replace: true });
-    window.location.reload();
+      // Redirigir al login después de cerrar sesión
+      navigate("/login", { replace: true });
+      window.location.reload();
       return;
     } catch (err) {
       // log and still redirect
       console.error("Logout error", err);
-      navigate("/", { replace: true });
+      navigate("/login", { replace: true });
       window.location.reload();
       return;
     }

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { registerUser } from "@/lib/auth";
 import logoLight from "@/assets/images/logo-white-3.svg";
 
@@ -121,7 +121,7 @@ const Register = () => {
   };
 
   const handleBackHome = () => {
-    navigate("/", { replace: true });
+    navigate("/login", { replace: true });
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -155,7 +155,7 @@ const Register = () => {
       setFeedback({
         type: "success",
         message:
-          "¡Listo! Revisá tu correo para confirmar la cuenta. Una vez ingreses podrás completar tu perfil en el panel.",
+          "¡Listo! Revisá tu correo para confirmar la cuenta. Una vez confirmada podrás iniciar sesión.",
       });
       setIsSubmitting(false);
       return;
@@ -163,11 +163,11 @@ const Register = () => {
 
     setFeedback({
       type: "success",
-      message: "Cuenta creada con éxito. Te redirigimos al inicio de sesión...",
+      message: "Cuenta creada con éxito. Te redirigimos al login...",
     });
 
     window.setTimeout(() => {
-      navigate("/", { replace: true });
+      navigate("/login", { replace: true });
     }, 2000);
   };
 
@@ -390,7 +390,10 @@ const Register = () => {
                   {isSubmitting ? "Creando cuenta..." : "Crear cuenta"}
                 </button>
                 <p className="mt-4 text-center text-sm text-white text-opacity-70">
-                  ¿Ya tenés una cuenta? <span className="font-semibold text-white">Ingresá desde el panel principal.</span>
+                  ¿Ya tenés una cuenta?{' '}
+                  <Link to="/login" className="font-semibold text-emerald-300 hover:text-emerald-200">
+                    Iniciá sesión
+                  </Link>
                 </p>
               </div>
             </form>

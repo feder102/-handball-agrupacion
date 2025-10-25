@@ -23,6 +23,7 @@
 | [`ARQUITECTURA_CAMBIOS.md`](./ARQUITECTURA_CAMBIOS.md) | Comparación antes/después, análisis de mejoras | Para entender las decisiones arquitectónicas |
 | [`DIAGRAMAS.md`](./DIAGRAMAS.md) | 7 diagramas Mermaid visuales del sistema | Para visualizar flujos y relaciones |
 | [`REGISTRO_AUTOMATICO.md`](./REGISTRO_AUTOMATICO.md) | Documentación completa del sistema | Para entender cómo funciona todo |
+| [`NAVEGACION_AUTENTICACION.md`](./NAVEGACION_AUTENTICACION.md) | Sistema de navegación y rutas protegidas | Para entender el flujo de autenticación |
 
 ### 🔧 Implementación y Desarrollo
 
@@ -55,12 +56,15 @@
 ### 👨‍💻 Desarrollador Frontend
 
 **Secuencia sugerida:**
-1. [`REGISTRO_AUTOMATICO.md`](./REGISTRO_AUTOMATICO.md) → Sección "Función Frontend"
-2. [`web/src/lib/auth.ts`](./web/src/lib/auth.ts) → Código actualizado
-3. [`web/src/pages/Register.tsx`](./web/src/pages/Register.tsx) → Componente de registro
-4. [`TROUBLESHOOTING.md`](./TROUBLESHOOTING.md) → Para resolver problemas
+1. [`NAVEGACION_AUTENTICACION.md`](./NAVEGACION_AUTENTICACION.md) → Sistema de rutas y autenticación
+2. [`REGISTRO_AUTOMATICO.md`](./REGISTRO_AUTOMATICO.md) → Sección "Función Frontend"
+3. [`web/src/lib/auth.ts`](./web/src/lib/auth.ts) → Código actualizado
+4. [`web/src/pages/Register.tsx`](./web/src/pages/Register.tsx) → Componente de registro
+5. [`TROUBLESHOOTING.md`](./TROUBLESHOOTING.md) → Para resolver problemas
 
 **Lo que necesitás saber:**
+- ✅ Cómo funcionan las rutas protegidas con `ProtectedRoute`
+- ✅ Flujo de login → dashboard → navegación
 - ✅ Cómo enviar datos en `options.data` del signUp
 - ✅ Qué campos son obligatorios (documento)
 - ✅ Cómo manejar errores del trigger
@@ -139,6 +143,8 @@
 | Tema | Archivo Recomendado | Sección |
 |------|---------------------|---------|
 | **Cómo funciona el trigger** | `REGISTRO_AUTOMATICO.md` | "Trigger de Base de Datos" |
+| **Cómo funcionan las rutas protegidas** | `NAVEGACION_AUTENTICACION.md` | "ProtectedRoute" |
+| **Flujo de login y registro** | `NAVEGACION_AUTENTICACION.md` | "Flujos de Usuario" |
 | **Cómo implementar en frontend** | `REGISTRO_AUTOMATICO.md` | "Función Frontend" |
 | **Por qué elegimos triggers** | `ARQUITECTURA_CAMBIOS.md` | "Comparación" |
 | **Cómo probar el sistema** | `test_trigger.sql` + `CHECKLIST_IMPLEMENTACION.md` | Completo |

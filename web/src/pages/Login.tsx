@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -39,8 +40,10 @@ export default function Login() {
         return;
       }
 
-      // Redirect to the app home after successful login
-      navigate("/", { replace: true });
+      // Redirigir al dashboard después del login exitoso
+      // Si venía de otra ruta protegida, volver ahí
+      const from = (location.state as any)?.from?.pathname || "/dashboard";
+      navigate(from, { replace: true });
     } catch (err: any) {
       setError(err?.message ?? String(err));
     } finally {
@@ -53,7 +56,7 @@ export default function Login() {
     setUser(null);
   };
 
-  // If user is already signed in show quick actions
+  // Si el usuario ya está logueado, redirigir al dashboard
   if (user) {
     return (
       <div className="min-h-screen flex items-center justify-center px-6 py-12">
@@ -61,7 +64,7 @@ export default function Login() {
           <h1 className="text-2xl font-bold text-white mb-4">Sesión iniciada</h1>
           <p className="text-sm text-white mb-4">Conectado como <strong>{user.email}</strong></p>
           <div className="flex gap-3">
-            <button onClick={() => navigate('/')} className="px-4 py-2 rounded-full bg-emerald-500 text-white">Ir al inicio</button>
+            <button onClick={() => navigate('/dashboard')} className="px-4 py-2 rounded-full bg-emerald-500 text-white">Ir al dashboard</button>
             <button onClick={handleLogout} className="px-4 py-2 rounded-full bg-gray-200 text-black">Cerrar sesión</button>
           </div>
         </div>
